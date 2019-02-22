@@ -2,6 +2,7 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
+import calendar
 import csv
 import sys
 import os
@@ -70,30 +71,28 @@ data = {"function": "TIME_SERIES_DAILY",
         "apikey": "XXX"}
 rawRecentData, keys = get_current_raw_cata(API_URL, symbol, data)
 dataList, yearSpan = extract_data(rawRecentData, keys)
-
-#for data in dataList:
- #   print(data)
-
-xaxis = []
-yaxis = []
+for data in dataList:
+    print(data)
+x = []
+y = []
 colorList = ['r', 'g', 'b', 'c', 'm', 'y', 'k', 'w']  # Supports 8 years Max
-#plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-#plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m'))
+plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
 i = 0
-xCount = 0
+scale = []
 for year in yearSpan:
     for data in dataList:
         dateSplit = data[0].split("-")
         if int(dateSplit[0]) == year:
-            xaxis.append(xCount)
-            yaxis.append(round((abs(data[1] - data[2]) / data[1]), 3))
-            xCount += 1
+            x.append(dateSplit[2] + "-" + dateSplit[1])
+            y.append(round(((data[1] - data[2]) / data[1]), 3))
     xCount = 0
-    print((xaxis, yaxis))
-    plt.xticks(np.arange(0, 365, 30))
-    plt.plot(xaxis, yaxis, colorList[i])
+    plt.scatter(x, y, 3, label=year)
+    plt.legend(loc=1)
     i += 1
-    xaxis.clear()
-    yaxis.clear()
+    x.clear()
+    y.clear()
+    scale.clear()
+
 plt.show()
 plt.close()
