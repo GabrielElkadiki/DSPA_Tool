@@ -1,4 +1,6 @@
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import numpy as np
 import requests
 import csv
 import sys
@@ -53,8 +55,7 @@ def extract_data(raw_recent_data, keys):
         year_span = []
         new_data_list = []
         for data_point in full_data:
-            date_split = data_point[0].split("-")
-            new_data_list.append([date_split[0], date_split[1], date_split[2], (data_point[1]), (data_point[2])])
+            new_data_list.append([data_point[0], (data_point[1]), (data_point[2])])
         for i in range(year_span_size):
             year_span.append(int(oldest_year) + i)
         return new_data_list, year_span
@@ -69,15 +70,30 @@ data = {"function": "TIME_SERIES_DAILY",
         "apikey": "XXX"}
 rawRecentData, keys = get_current_raw_cata(API_URL, symbol, data)
 dataList, yearSpan = extract_data(rawRecentData, keys)
-sortedDataList = []
-tempDataList = []
-yearCount = 0
+
+#for data in dataList:
+ #   print(data)
+
+xaxis = []
+yaxis = []
+colorList = ['r', 'g', 'b', 'c', 'm', 'y', 'k', 'w']  # Supports 8 years Max
+#plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+#plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m'))
+i = 0
+xCount = 0
 for year in yearSpan:
     for data in dataList:
-        if int(data[0]) == int(year):
-            tempDataList.append(data)
-    sortedDataList.append(tempDataList)
-    tempDataList = []
-    yearCount += 1
-for data in sortedDataList:
-    print(sortedDataList[0])
+        dateSplit = data[0].split("-")
+        if int(dateSplit[0]) == year:
+            xaxis.append(xCount)
+            yaxis.append(round((abs(data[1] - data[2]) / data[1]), 3))
+            xCount += 1
+    xCount = 0
+    print((xaxis, yaxis))
+    plt.xticks(np.arange(0, 365, 30))
+    plt.plot(xaxis, yaxis, colorList[i])
+    i += 1
+    xaxis.clear()
+    yaxis.clear()
+plt.show()
+plt.close()
