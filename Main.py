@@ -1,18 +1,17 @@
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
-import numpy as np
 import requests
-import calendar
+import time
 import csv
 import sys
 import os
+
+symbol = 'aapl'
 
 
 def round_float(string):
     return round(float(string), 3)
 
 
-def get_current_raw_cata(API_URL, symbol, data):
+def get_current_raw_data(API_URL, symbol, data):
     try:
         response = requests.get(API_URL, data)
         print(response.status_code)
@@ -62,37 +61,38 @@ def extract_data(raw_recent_data, keys):
         return new_data_list, year_span
 
 
-API_URL = "https://www.alphavantage.co/query"
-symbol = 'aapl'
-monthRange = ["1", "2"]
-data = {"function": "TIME_SERIES_DAILY",
-        "symbol": symbol,
-        "outputsize": "compact",
-        "apikey": "XXX"}
-rawRecentData, keys = get_current_raw_cata(API_URL, symbol, data)
-dataList, yearSpan = extract_data(rawRecentData, keys)
-for data in dataList:
-    print(data)
-x = []
-y = []
-colorList = ['r', 'g', 'b', 'c', 'm', 'y', 'k', 'w']  # Supports 8 years Max
-plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
-i = 0
-scale = []
-for year in yearSpan:
-    for data in dataList:
-        dateSplit = data[0].split("-")
-        if int(dateSplit[0]) == year:
-            x.append(dateSplit[2] + "-" + dateSplit[1])
-            y.append(round(((data[1] - data[2]) / data[1]), 3))
-    xCount = 0
-    plt.scatter(x, y, 3, label=year)
-    plt.legend(loc=1)
-    i += 1
-    x.clear()
-    y.clear()
-    scale.clear()
+def max_delta(data_list):
+    max_increase = [0, ""]
+    max_decrease = [0, ""]
+    data_point_high = []
+    data_point_low = []
+    for data_point in data_list:
+        delta = 100 * (data_point[2] - data_point[1]) / data_point[1]
+        if delta > max_increase[0]:
+            max_increase = [delta, data_point[0]]
+            data_point_high = data_point
+        if delta < max_decrease[0]:
+            max_decrease = [delta, data_point[0]]
+            data_point_low = data_point
+    print("Max Increase in range = " + str(max_increase[0]) + " On " + max_increase[1])
+    print("Max Decrease in range = " + str(max_decrease[0]) + " On " + max_decrease[1])
 
-plt.show()
-plt.close()
+    print(data_point_high)
+    print(data_point_low)
+
+
+def main():
+    API_URL = "https://www.alphavantage.co/query"
+    monthRange = ["1", "2"]
+    data = {"function": "TIME_SERIES_DAILY",
+            "symbol": symbol,
+            "outputsize": "compact",
+            "apikey": "XXX"}
+    rawRecentData, keys = get_current_raw_data(API_URL, symbol, data)
+    dataList, yearSpan = extract_data(rawRecentData, keys)
+    dataList.sort(key=lambda date: time.mktime(time.strptime(date[0], "%Y-%m-%d")))
+    max_delta(dataList)
+
+
+if __name__ == "__main__":
+    main()
