@@ -72,22 +72,16 @@ def apply_month_range(data_list, month_range):
 def max_delta(data_list):
     max_increase = [0, ""]
     max_decrease = [0, ""]
-    data_point_high = []
-    data_point_low = []
     for data_point in data_list:
         delta = 100 * (data_point[2] - data_point[1]) / data_point[1]
         if delta > max_increase[0]:
             max_increase = [delta, data_point[0]]
-            data_point_high = data_point
         if delta < max_decrease[0]:
             max_decrease = [delta, data_point[0]]
-            data_point_low = data_point
-        max_increase[0] = round(max_increase[0], 3)
-        max_decrease[0] = round(max_decrease[0], 3)
-    print("Max Increase in range = " + str(max_increase[0]) + " On " + max_increase[1])
-    print("Max Decrease in range = " + str(max_decrease[0]) + " On " + max_decrease[1])
-    print(data_point_high)
-    print(data_point_low)
+        max_increase[0] = round_float(max_increase[0])
+        max_decrease[0] = round_float(max_decrease[0])
+    print("Max Increase = " + str(max_increase[0]) + " On " + max_increase[1])
+    print("Max Decrease = " + str(max_decrease[0]) + " On " + max_decrease[1])
 
 
 def produce_final_data_list(API_URL, data):
@@ -100,9 +94,13 @@ def produce_final_data_list(API_URL, data):
 
 def print_monthly_maximum_delta(data_list):
     month_range = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+    month_name = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    count = 0
     for month in month_range:
+        print("                 " + month_name[count])
         max_delta(apply_month_range(data_list, [month]))
         print("_____________________________________________")
+        count += 1
 
 
 def convert_price_to_delta(data_list):
@@ -113,6 +111,16 @@ def convert_price_to_delta(data_list):
     return data_list
 
 
+def find_correlation(data_list, num_days):
+    day = str(time.localtime(time.time()).tm_mday)
+    if len(day) == 1:
+        day = "0" + day
+    month = str(time.localtime(time.time()).tm_mon)
+    if len(month) == 1:
+        month = "0" + month
+    print(day + "-" + month)
+
+
 def main():
     API_URL = "https://www.alphavantage.co/query"
     data = {"function": "TIME_SERIES_DAILY",
@@ -120,9 +128,11 @@ def main():
             "outputsize": "compact",
             "apikey": "XXX"}
     dataList = produce_final_data_list(API_URL, data)
-    #max_delta(dataList)
-    #print_monthly_maximum_delta(dataList)
-    #convert_price_to_delta(dataList)
+    # max_delta(dataList)
+    # print_monthly_maximum_delta(dataList)
+    # print(convert_price_to_delta(dataList))
+    find_correlation(dataList, 5)
+
 
 if __name__ == "__main__":
     main()
