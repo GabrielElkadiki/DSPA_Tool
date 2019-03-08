@@ -1,4 +1,5 @@
 import requests
+import datetime
 import time
 import csv
 import sys
@@ -115,22 +116,42 @@ def convert_price_to_delta(data_list):
 
 def compare_past_dates(data_list, num_days):
     data_list = convert_price_to_delta(data_list)
-    current_day = str(time.localtime(time.time()).tm_mday)
-    if len(current_day) == 1:
-        current_day = "0" + current_day
-    current_month = str(time.localtime(time.time()).tm_mon)
-    if len(current_month) == 1:
-        current_month = "0" + current_month
-    current_date = (current_day + "-" + current_month)
-    print(current_date)
-    sample_list = []
-    for data_index in range(len(data_list)):
-        if (data_list[data_index])[0].split("-")[1] + "-" + (data_list[data_index])[0].split("-")[2] == current_date:
-            print((data_list[data_index])[0].split("-")[1] + "-" + (data_list[data_index])[0].split("-")[2])
-            for series_index in range(num_days):
-                sample_list.append(data_list[data_index + series_index])
-    print(sample_list)
+    target_date_list = []
+    for i in range(num_days):
+        target_date = (datetime.date.today() + datetime.timedelta(days=i))
+        day = str(target_date.day)
+        if len(day) == 1:
+            day = "0" + day
+        month = str(target_date.month)
+        if len(month) == 1:
+            month = "0" + month
+        target_date_list.append(month + "-" + day)
+    target_delta_list = []
+    same_date_list = []
+    for target in target_date_list:
+        for data in data_list:
+            if data[0].split("-")[1] + "-" + (data[0]).split("-")[2] == target:
+                same_date_list.append(data)
+        target_delta_list.append(same_date_list)
+        same_date_list = []
 
+    for target_list in target_delta_list:
+        pos_count = 0
+        neg_count = 0
+        date = ""
+        for target in target_list:
+            date = target[0].split("-")[1] + "-" + (target[0]).split("-")[2]
+            if target[1] >= 0:
+                pos_count += 1
+            else:
+                neg_count += 1
+        pbty_up = 100 * pos_count / (pos_count + neg_count)
+        pbty_down = 100 * neg_count / (pos_count + neg_count)
+        print("On " + date + ": ")
+        print("PBTY of increase = " + str(round_float(pbty_up)) + "%")
+        print("PBTY of decrease = " + str(round_float(pbty_down)) + "%")
+        print("Number of years = " + str(pos_count + neg_count))
+        print("________________________________________________")
 
 def main():
     API_URL = "https://www.alphavantage.co/query"
@@ -142,7 +163,7 @@ def main():
     # max_delta(dataList)
     # print_monthly_maximum_delta(dataList)
     # print(convert_price_to_delta(dataList))
-    compare_past_dates(dataList, 2)
+    compare_past_dates(dataList, 30)
     # dataList = convert_price_to_delta(dataList)
     # for data in dataList:
     #    print(data[0].split("-")[1] + "-" + data[0].split("-")[2])
