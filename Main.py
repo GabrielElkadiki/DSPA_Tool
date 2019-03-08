@@ -104,6 +104,8 @@ def print_monthly_maximum_delta(data_list):
 
 
 def convert_price_to_delta(data_list):
+    if len(data_list) == 2:
+        return data_list
     for data_point in data_list:
         delta = 100 * (data_point[2] - data_point[1]) / data_point[1]
         data_point[1] = delta
@@ -111,14 +113,23 @@ def convert_price_to_delta(data_list):
     return data_list
 
 
-def find_correlation(data_list, num_days):
-    day = str(time.localtime(time.time()).tm_mday)
-    if len(day) == 1:
-        day = "0" + day
-    month = str(time.localtime(time.time()).tm_mon)
-    if len(month) == 1:
-        month = "0" + month
-    print(day + "-" + month)
+def compare_past_dates(data_list, num_days):
+    data_list = convert_price_to_delta(data_list)
+    current_day = str(time.localtime(time.time()).tm_mday)
+    if len(current_day) == 1:
+        current_day = "0" + current_day
+    current_month = str(time.localtime(time.time()).tm_mon)
+    if len(current_month) == 1:
+        current_month = "0" + current_month
+    current_date = (current_day + "-" + current_month)
+    print(current_date)
+    sample_list = []
+    for data_index in range(len(data_list)):
+        if (data_list[data_index])[0].split("-")[1] + "-" + (data_list[data_index])[0].split("-")[2] == current_date:
+            print((data_list[data_index])[0].split("-")[1] + "-" + (data_list[data_index])[0].split("-")[2])
+            for series_index in range(num_days):
+                sample_list.append(data_list[data_index + series_index])
+    print(sample_list)
 
 
 def main():
@@ -131,7 +142,10 @@ def main():
     # max_delta(dataList)
     # print_monthly_maximum_delta(dataList)
     # print(convert_price_to_delta(dataList))
-    find_correlation(dataList, 5)
+    compare_past_dates(dataList, 2)
+    # dataList = convert_price_to_delta(dataList)
+    # for data in dataList:
+    #    print(data[0].split("-")[1] + "-" + data[0].split("-")[2])
 
 
 if __name__ == "__main__":
