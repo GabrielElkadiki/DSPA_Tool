@@ -71,12 +71,14 @@ def apply_month_range(month_range):
     return filtered_data_list
 
 
-def max_delta():
-    global data_list
+def max_delta(filtered_data_list):
+    if filtered_data_list is None:
+        filtered_data_list = data_list
+        max_delta_string = "Max Delta in present Data:"
     max_increase = [0, ""]
     max_decrease = [0, ""]
     if len(data_list[0]) == 2:
-        for data_point in data_list:
+        for data_point in filtered_data_list:
             delta = data_point[1]
             if delta > max_increase[0]:
                 max_increase = [delta, data_point[0]]
@@ -85,7 +87,7 @@ def max_delta():
             max_increase[0] = round_float(max_increase[0])
             max_decrease[0] = round_float(max_decrease[0])
     else:
-        for data_point in data_list:
+        for data_point in filtered_data_list:
             delta = 100 * (data_point[2] - data_point[1]) / data_point[1]
             if delta > max_increase[0]:
                 max_increase = [delta, data_point[0]]
@@ -93,8 +95,11 @@ def max_delta():
                 max_decrease = [delta, data_point[0]]
             max_increase[0] = round_float(max_increase[0])
             max_decrease[0] = round_float(max_decrease[0])
-    print("Max Increase = " + str(max_increase[0]) + " On " + max_increase[1])
-    print("Max Decrease = " + str(max_decrease[0]) + " On " + max_decrease[1])
+    max_delta_string += (
+            "\nMax Increase = " + str(max_increase[0]) + "   On " + max_increase[1] +
+            "\nMax Decrease = " + str(max_decrease[0]) + "   On " + max_decrease[1]
+    )
+    return max_delta_string
 
 
 def produce_final_data_list(API_URL, data):
@@ -107,16 +112,20 @@ def produce_final_data_list(API_URL, data):
     data_list.sort(key=lambda date: time.mktime(time.strptime(date[0], "%Y-%m-%d")))
 
 
-def print_monthly_maximum_delta():
+def monthly_maximum_delta():
     global data_list
     month_range = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
     month_name = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     count = 0
+    monthly_maximum_delta_string = ""
     for month in month_range:
-        print("                 " + month_name[count])
-        max_delta(apply_month_range([month]))
-        print("_____________________________________________")
+        monthly_maximum_delta_string += (
+                "\n                 " + month_name[count] +
+                max_delta(apply_month_range([month])) +
+                "\n______________________________"
+        )
         count += 1
+    return monthly_maximum_delta_string
 
 
 def convert_price_to_delta():
@@ -125,7 +134,9 @@ def convert_price_to_delta():
         return
     else:
         for data_point in data_list:
-            delta = 100 * (data_point[2] - data_point[1]) / data_point[1]
+            open_price = data_point[1]
+            close_price = data_point[2]
+            delta = 100 * ((close_price - open_price) / open_price)
             data_point[1] = round_float(delta)
             del(data_point[2])
 
@@ -150,6 +161,7 @@ def compare_past_dates(num_days):
                 same_date_list.append(data)
         target_delta_list.append(same_date_list)
         same_date_list = []
+    compare_past_dates_string = ""
     for target_list in target_delta_list:
         date = ""
         pos_count = 0
@@ -164,15 +176,28 @@ def compare_past_dates(num_days):
             else:
                 neg_count += 1
                 neg_delta_sum += target[1]
-        pbty_up = 100 * pos_count / (pos_count + neg_count)
-        pbty_down = 100 * neg_count / (pos_count + neg_count)
-        print("On " + date + ": ")
-        print("PBTY of increase = " + str(round_float(pbty_up)) + "%")
-        print("Average increase change = " + str(round_float(pos_delta_sum/pos_count)))
-        print("PBTY of decrease = " + str(round_float(pbty_down)) + "%")
-        print("Average decrease change = " + str(round_float(neg_delta_sum/pos_count)))
-        print("Number of years = " + str(pos_count + neg_count))
-        print("________________________________________________")
+        if pos_count + neg_count > 0:
+            pbty_up = 100 * pos_count / (pos_count + neg_count)
+            pbty_down = 100 * neg_count / (pos_count + neg_count)
+            if pos_count > 0:
+                avg_increase = str(round_float(pos_delta_sum / pos_count))
+            else:
+                avg_increase = "0"
+            if neg_count > 0:
+                avg_decrease = str(round_float(neg_delta_sum / neg_count))
+            else:
+                avg_decrease = "0"
+            compare_past_dates_string += (
+                    "\nOn " + date + ":" +
+                    "\nProbability of increase = " + str(round_float(pbty_up)) + "%" +
+                    "\nAverage increase change = " + avg_increase + "%" +
+                    "\nProbability of decrease = " + str(round_float(pbty_down)) + "%" +
+                    "\nAverage decrease change = " + avg_decrease + "%" +
+                    "\nNumber of years = " + str(pos_count + neg_count) +
+                    "\n______________________________"
+            )
+
+    return compare_past_dates_string
 
 
 def reset():
@@ -181,12 +206,13 @@ def reset():
     data = {"function": "TIME_SERIES_DAILY",
             "symbol": symbol,
             "outputsize": "compact",
-            "apikey": "XXX"}
+            "apikey": "XCD"}
     produce_final_data_list(API_URL, data)
     data_list_string = ""
     for data in data_list:
         delta_string = data[1]
         if delta_string > 0:
             delta_string = " " + str(delta_string)
-        data_list_string += str(data[0]) + " = " + str(delta_string) + "\n"
+        data_list_string += str(data[0]) + " = " + str(delta_string) + "%\n"
     return data_list_string
+
