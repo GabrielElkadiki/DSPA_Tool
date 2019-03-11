@@ -67,7 +67,7 @@ def apply_month_range(month_range):
     filtered_data_list = []
     for data_point in data_list:
         if data_point[0].split("-")[1] in month_range:
-            filtered_data_list.append([data_point[0], data_point[1]])
+            filtered_data_list.append(data_point)
     return filtered_data_list
 
 
@@ -75,26 +75,20 @@ def max_delta(filtered_data_list):
     if filtered_data_list is None:
         filtered_data_list = data_list
         max_delta_string = "Max Delta in present Data:"
+    else:
+        max_delta_string = ""
     max_increase = [0, ""]
     max_decrease = [0, ""]
-    if len(data_list[0]) == 2:
-        for data_point in filtered_data_list:
-            delta = data_point[1]
-            if delta > max_increase[0]:
-                max_increase = [delta, data_point[0]]
-            if delta < max_decrease[0]:
-                max_decrease = [delta, data_point[0]]
-            max_increase[0] = round_float(max_increase[0])
-            max_decrease[0] = round_float(max_decrease[0])
-    else:
-        for data_point in filtered_data_list:
-            delta = 100 * (data_point[2] - data_point[1]) / data_point[1]
-            if delta > max_increase[0]:
-                max_increase = [delta, data_point[0]]
-            if delta < max_decrease[0]:
-                max_decrease = [delta, data_point[0]]
-            max_increase[0] = round_float(max_increase[0])
-            max_decrease[0] = round_float(max_decrease[0])
+    if len(data_list[0]) == 3:
+        convert_price_to_delta(data_list)
+    for data_point in filtered_data_list:
+        delta = data_point[3]
+        if delta > max_increase[0]:
+            max_increase = [delta, data_point[0]]
+        if delta < max_decrease[0]:
+            max_decrease = [delta, data_point[0]]
+        max_increase[0] = round_float(max_increase[0])
+        max_decrease[0] = round_float(max_decrease[0])
     max_delta_string += (
             "\nMax Increase = " + str(max_increase[0]) + "   On " + max_increase[1] +
             "\nMax Decrease = " + str(max_decrease[0]) + "   On " + max_decrease[1]
@@ -137,8 +131,7 @@ def convert_price_to_delta():
             open_price = data_point[1]
             close_price = data_point[2]
             delta = 100 * ((close_price - open_price) / open_price)
-            data_point[1] = round_float(delta)
-            del(data_point[2])
+            data_point.append(round_float(delta))
 
 
 def compare_past_dates(num_days):
@@ -170,12 +163,12 @@ def compare_past_dates(num_days):
         neg_delta_sum = 0
         for target in target_list:
             date = target[0].split("-")[1] + "-" + (target[0]).split("-")[2]
-            if target[1] >= 0:
+            if target[3] >= 0:
                 pos_count += 1
-                pos_delta_sum += target[1]
+                pos_delta_sum += target[3]
             else:
                 neg_count += 1
-                neg_delta_sum += target[1]
+                neg_delta_sum += target[3]
         if pos_count + neg_count > 0:
             pbty_up = 100 * pos_count / (pos_count + neg_count)
             pbty_down = 100 * neg_count / (pos_count + neg_count)
@@ -196,7 +189,6 @@ def compare_past_dates(num_days):
                     "\nNumber of years = " + str(pos_count + neg_count) +
                     "\n______________________________"
             )
-
     return compare_past_dates_string
 
 
@@ -210,9 +202,10 @@ def reset():
     produce_final_data_list(API_URL, data)
     data_list_string = ""
     for data in data_list:
-        delta_string = data[1]
+        delta_string = data[3]
         if delta_string > 0:
             delta_string = " " + str(delta_string)
         data_list_string += str(data[0]) + " = " + str(delta_string) + "%\n"
     return data_list_string
+
 

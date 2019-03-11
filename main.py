@@ -1,5 +1,5 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from back_end import qtGUI, functionList
+from PyQt5 import QtWidgets
+from back_end import qtGUI, functions
 import sys
 
 app = QtWidgets.QApplication(sys.argv)
@@ -15,7 +15,7 @@ ui.compare_past_dates_QSpinBox.setEnabled(False)
 def reset_button_event():
     ui.clear_data_QPushButton.setEnabled(True)
     ui.reset_data_QPushButton.setEnabled(False)
-    ui.console_QTextEdit.setText(functionList.reset())
+    ui.console_QTextEdit.setText(functions.reset())
     ui.compare_past_dates_QPushButton.setEnabled(True)
     ui.monthly_maximum_delta_QPushButton.setEnabled(True)
     ui.max_delta_QPushButton.setEnabled(True)
@@ -30,17 +30,17 @@ def clear_button_event():
 
 def compare_past_dates_button_event():
     ui.clear_data_QPushButton.setEnabled(True)
-    ui.console_QTextEdit.setText(functionList.compare_past_dates(ui.compare_past_dates_QSpinBox.value()))
+    ui.console_QTextEdit.setText(functions.compare_past_dates(ui.compare_past_dates_QSpinBox.value()))
 
 
 def monthly_maximum_button_event():
     ui.clear_data_QPushButton.setEnabled(True)
-    ui.console_QTextEdit.setText(functionList.monthly_maximum_delta())
+    ui.console_QTextEdit.setText(functions.monthly_maximum_delta())
 
 
 def max_delta_button_event():
     ui.clear_data_QPushButton.setEnabled(True)
-    ui.console_QTextEdit.setText(functionList.max_delta(None))
+    ui.console_QTextEdit.setText(functions.max_delta(None))
 
 
 ui.reset_data_QPushButton.clicked.connect(reset_button_event)
