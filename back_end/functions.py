@@ -2,7 +2,6 @@ import requests
 import datetime
 import time
 import csv
-import sys
 import os
 
 symbol = 'aapl'
@@ -13,13 +12,18 @@ def round_float(string):
     return round(float(string), 3)
 
 
-def get_current_raw_data(API_URL, symbol, data):
+def get_date_today_plus_num_days(num_days):
+    return datetime.date.today() + datetime.timedelta(days=num_days)
+
+
+def get_current_raw_data(API_URL, data):
+    global symbol
     try:
         response = requests.get(API_URL, data)
         json = response.json()
     except requests.exceptions.RequestException as e:
         print("Error: {}".format(e))
-        sys.exit(1)
+        return 0, 0
     raw_recent_data = (json['Time Series (Daily)'])
     keys = (raw_recent_data.keys())
     return raw_recent_data, keys
@@ -28,11 +32,12 @@ def get_current_raw_data(API_URL, symbol, data):
 def extract_data(raw_recent_data, keys):
     recent_data = []
     line_count = 0
-    for key in keys:
-        if line_count != 0:
-            recent_data.append(
-                [key, round_float(raw_recent_data[key]['1. open']), round_float(raw_recent_data[key]['4. close'])])
-        line_count += 1
+    if not keys == 0:
+        for key in keys:
+            if line_count != 0:
+                recent_data.append(
+                    [key, round_float(raw_recent_data[key]['1. open']), round_float(raw_recent_data[key]['4. close'])])
+            line_count += 1
     if not os.path.exists("./Historic_Data/" + str(symbol) + ".csv"):
         print("ERROR: Specified stock ticker historic data is unavailable")
     else:
@@ -44,10 +49,15 @@ def extract_data(raw_recent_data, keys):
             if line_count != 0:
                 historic_data.append([row[0], round_float(row[1]), round_float(row[4])])
             line_count += 1
-        full_data_list_tuple = list(set(tuple(i) for i in (recent_data + historic_data)))
         full_data = []
-        for data in full_data_list_tuple:
-            full_data.append([data[0], data[1], data[2]])
+        if not recent_data == 0:
+            full_data_list_tuple = list(set(tuple(i) for i in (recent_data + historic_data)))
+            for data in full_data_list_tuple:
+                full_data.append([data[0], data[1], data[2]])
+        else:
+            full_data_list_tuple = list(set(tuple(i) for i in historic_data))
+            for data in full_data_list_tuple:
+                full_data.append([data[0], data[1], data[2]])
         return full_data
 
 
@@ -99,7 +109,7 @@ def max_delta(filtered_data_list):
 def produce_final_data_list(API_URL, data):
     global data_list
     month_range = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-    raw_recent_data, keys = get_current_raw_data(API_URL, symbol, data)
+    raw_recent_data, keys = get_current_raw_data(API_URL, data)
     data_list = extract_data(raw_recent_data, keys)
     apply_month_range(month_range)
     convert_price_to_delta()
@@ -134,11 +144,13 @@ def convert_price_to_delta():
             data_point.append(round_float(delta))
 
 
-def compare_past_dates(num_days):
+def compare_past_dates(start_date, stop_date):
     global data_list
     target_date_list = []
-    for i in range(num_days + 1):
-        target_date = (datetime.date.today() + datetime.timedelta(days=i))
+    start_date = start_date.toPyDate()
+    stop_date = stop_date.toPyDate()
+    for i in range((stop_date - start_date).days + 1):
+        target_date = (start_date + datetime.timedelta(days=i))
         day = str(target_date.day)
         if len(day) == 1:
             day = "0" + day
@@ -192,6 +204,44 @@ def compare_past_dates(num_days):
     return compare_past_dates_string
 
 
+def calculate_price_delta(start_date, stop_date):
+    global data_list
+    start_date = start_date.toPyDate()
+    stop_date = stop_date.toPyDate()
+    if (stop_date - start_date).days < 0:
+        return "Invalid Date Range Entered\nMake sure the Stop Date is after the Start Date"
+    start_price = -1
+    stop_price = -1
+    start_date_string = "Start Date: "
+    stop_date_string = "Stop Date: "
+    for i in range(4):
+        for data in data_list:
+            if data[0] == str(start_date):
+                start_price = data[1]
+            if data[0] == str(stop_date):
+                stop_price = data[2]
+            if start_price > -1 and stop_price > -1:
+                break
+        if start_price == -1:
+            start_date += datetime.timedelta(days=1)
+            start_date_string = "Adjusted Start Date: "
+        if stop_price == -1:
+            stop_date += datetime.timedelta(days=1)
+            stop_date_string = "Adjusted Stop Date: "
+        if start_price > -1 and stop_price > -1:
+            break
+    if start_price == -1 or stop_price == -1:
+        return "Data does not exist\nMake sure dates are within Historic and Recent Data Limits"
+    percent_change = 100 * ((stop_price - start_price)/start_price)
+    return (
+            start_date_string + str(start_date) +
+            "\n" + "Start Price = " + str(start_price) +
+            "\n" + stop_date_string + str(stop_date) +
+            "\n" + "Stop Price = " + str(stop_price) +
+            "\nPercentage Change = " + str(round(percent_change, 3)) + "%"
+    )
+
+
 def reset():
     global data_list
     API_URL = "https://www.alphavantage.co/query"
@@ -209,3 +259,5 @@ def reset():
     return data_list_string
 
 
+#reset()
+#calculate_price_delta(datetime.date(2018,3,2), datetime.date(2018,5,2))
