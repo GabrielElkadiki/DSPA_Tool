@@ -4,7 +4,6 @@ import time
 import csv
 import os
 
-symbol = 'aapl'
 data_list = []
 
 
@@ -16,10 +15,9 @@ def get_date_today_plus_num_days(num_days):
     return datetime.date.today() + datetime.timedelta(days=num_days)
 
 
-def get_current_raw_data(API_URL, data):
-    global symbol
+def get_current_raw_data(API_URL, param):
     try:
-        response = requests.get(API_URL, data)
+        response = requests.get(API_URL, param)
         json = response.json()
     except requests.exceptions.RequestException as e:
         print("Error: {}".format(e))
@@ -29,7 +27,7 @@ def get_current_raw_data(API_URL, data):
     return raw_recent_data, keys
 
 
-def extract_data(raw_recent_data, keys):
+def extract_data(raw_recent_data, keys, symbol):
     recent_data = []
     line_count = 0
     if not keys == 0:
@@ -106,17 +104,7 @@ def max_delta(filtered_data_list):
     return max_delta_string
 
 
-def produce_final_data_list(API_URL, data):
-    global data_list
-    month_range = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-    raw_recent_data, keys = get_current_raw_data(API_URL, data)
-    data_list = extract_data(raw_recent_data, keys)
-    apply_month_range(month_range)
-    convert_price_to_delta()
-    data_list.sort(key=lambda date: time.mktime(time.strptime(date[0], "%Y-%m-%d")))
-
-
-def monthly_maximum_delta():
+def monthly_max_delta():
     global data_list
     month_range = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
     month_name = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -134,7 +122,7 @@ def monthly_maximum_delta():
 
 def convert_price_to_delta():
     global data_list
-    if len(data_list[0]) == 2:
+    if len(data_list[0]) == 4:
         return
     else:
         for data_point in data_list:
@@ -242,14 +230,25 @@ def calculate_price_delta(start_date, stop_date):
     )
 
 
+def produce_final_data_list(API_URL, data, symbol):
+    global data_list
+    month_range = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+    raw_recent_data, keys = get_current_raw_data(API_URL, data)
+    data_list = extract_data(raw_recent_data, keys, symbol)
+    apply_month_range(month_range)
+    convert_price_to_delta()
+    data_list.sort(key=lambda date: time.mktime(time.strptime(date[0], "%Y-%m-%d")))
+
+
 def reset():
     global data_list
     API_URL = "https://www.alphavantage.co/query"
-    data = {"function": "TIME_SERIES_DAILY",
+    symbol = 'aapl'
+    param = {"function": "TIME_SERIES_DAILY",
             "symbol": symbol,
             "outputsize": "compact",
             "apikey": "XCD"}
-    produce_final_data_list(API_URL, data)
+    produce_final_data_list(API_URL, param, symbol)
     data_list_string = ""
     for data in data_list:
         delta_string = data[3]
@@ -258,6 +257,3 @@ def reset():
         data_list_string += str(data[0]) + " = " + str(delta_string) + "%\n"
     return data_list_string
 
-
-#reset()
-#calculate_price_delta(datetime.date(2018,3,2), datetime.date(2018,5,2))

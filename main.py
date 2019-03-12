@@ -44,14 +44,15 @@ def calculate_price_delta_QPushButton():
     ui.console_QTextEdit.setText(functions.calculate_price_delta(start_date, stop_date))
 
 
-def monthly_maximum_button_event():
+def monthly_max_delta_button_event():
     ui.clear_data_QPushButton.setEnabled(True)
-    ui.console_QTextEdit.setText(functions.monthly_maximum_delta())
+    ui.console_QTextEdit.setText(functions.monthly_max_delta())
 
 
 def max_delta_button_event():
     ui.clear_data_QPushButton.setEnabled(True)
     ui.console_QTextEdit.setText(functions.max_delta(None))
+
 
 def set_today_button_event():
     ui.start_date_dateEdit.setDate(functions.get_date_today_plus_num_days(0))
@@ -64,7 +65,7 @@ def set_tomorrow_button_event():
 ui.reset_data_QPushButton.clicked.connect(reset_button_event)
 ui.clear_data_QPushButton.clicked.connect(clear_button_event)
 ui.compare_past_dates_QPushButton.clicked.connect(compare_past_dates_button_event)
-ui.monthly_maximum_delta_QPushButton.clicked.connect(monthly_maximum_button_event)
+ui.monthly_maximum_delta_QPushButton.clicked.connect(monthly_max_delta_button_event)
 ui.max_delta_QPushButton.clicked.connect(max_delta_button_event)
 ui.set_today_QPushButton.clicked.connect(set_today_button_event)
 ui.set_tomorrow_QPushButton.clicked.connect(set_tomorrow_button_event)
