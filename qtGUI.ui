@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1308</width>
+    <width>1328</width>
     <height>1023</height>
    </rect>
   </property>
@@ -36,7 +36,7 @@
    <property name="geometry">
     <rect>
      <x>670</x>
-     <y>60</y>
+     <y>200</y>
      <width>611</width>
      <height>461</height>
     </rect>
@@ -46,16 +46,16 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QPushButton" name="compare_past_dates_QPushButton">
+     <widget class="QPushButton" name="calculate_price_delta_QPushButton">
       <property name="text">
-       <string>Compare Past Dates</string>
+       <string>Calulate Price Delta</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="calculate_price_delta_QPushButton">
+     <widget class="QPushButton" name="compare_past_dates_QPushButton">
       <property name="text">
-       <string>Calulate Price Delta</string>
+       <string>Compare Past Dates</string>
       </property>
      </widget>
     </item>
@@ -93,7 +93,7 @@
    <property name="geometry">
     <rect>
      <x>670</x>
-     <y>530</y>
+     <y>670</y>
      <width>611</width>
      <height>133</height>
     </rect>
@@ -104,14 +104,14 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="start_date_QLabel">
           <property name="text">
            <string>Start Date</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_2">
+         <widget class="QLabel" name="stop_date_QLabel">
           <property name="text">
            <string>Stop Date</string>
           </property>
@@ -169,9 +169,41 @@
     </item>
    </layout>
   </widget>
-  <zorder>console_QTextEdit</zorder>
-  <zorder>layoutWidget</zorder>
-  <zorder>layoutWidget</zorder>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>670</x>
+     <y>110</y>
+     <width>221</width>
+     <height>81</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QLabel" name="symbol_QLabel">
+      <property name="text">
+       <string>Symbol:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="symbol_QLineEdit">
+      <property name="inputMethodHints">
+       <set>Qt::ImhPreferUppercase|Qt::ImhUppercaseOnly</set>
+      </property>
+      <property name="maxLength">
+       <number>4</number>
+      </property>
+      <property name="clearButtonEnabled">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
  </widget>
  <resources/>
  <connections/>

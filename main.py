@@ -17,7 +17,7 @@ ui.stop_date_dateEdit.setDate(functions.get_date_today_plus_num_days(1))
 def reset_button_event():
     ui.reset_data_QPushButton.setEnabled(False)
     ui.clear_data_QPushButton.setEnabled(True)
-    ui.console_QTextEdit.setText(functions.reset())
+    ui.console_QTextEdit.setText(functions.reset(ui.symbol_QLineEdit.text().upper()))
     ui.compare_past_dates_QPushButton.setEnabled(True)
     ui.monthly_maximum_delta_QPushButton.setEnabled(True)
     ui.max_delta_QPushButton.setEnabled(True)

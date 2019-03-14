@@ -15,48 +15,86 @@ def get_date_today_plus_num_days(num_days):
     return datetime.date.today() + datetime.timedelta(days=num_days)
 
 
-def get_current_raw_data(API_URL, param):
-    try:
-        response = requests.get(API_URL, param)
-        json = response.json()
-    except requests.exceptions.RequestException as e:
-        print("Error: {}".format(e))
-        return 0, 0
-    raw_recent_data = (json['Time Series (Daily)'])
-    keys = (raw_recent_data.keys())
-    return raw_recent_data, keys
+def convert_price_to_delta():
+    global data_list
+    if len(data_list[0]) == 4:
+        return
+    else:
+        for data_point in data_list:
+            open_price = data_point[1]
+            close_price = data_point[2]
+            delta = 100 * ((close_price - open_price) / open_price)
+            data_point.append(round_float(delta))
 
 
-def extract_data(raw_recent_data, keys, symbol):
-    recent_data = []
-    line_count = 0
-    if not keys == 0:
-        for key in keys:
-            if line_count != 0:
-                recent_data.append(
-                    [key, round_float(raw_recent_data[key]['1. open']), round_float(raw_recent_data[key]['4. close'])])
-            line_count += 1
+def get_data(API_URL, param, symbol):
+    global data_list
     if not os.path.exists("./Historic_Data/" + str(symbol) + ".csv"):
         print("ERROR: Specified stock ticker historic data is unavailable")
+        csv_file = open("./Historic_Data/" + str(symbol) + ".csv", 'w+')
     else:
-        csv_file = open("./Historic_Data/" + str(symbol) + ".csv")
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        line_count = 0
-        historic_data = []
-        for row in csv_reader:
-            if line_count != 0:
+        csv_file = open("./Historic_Data/" + str(symbol) + ".csv", 'r')
+    line_count = 0
+    historic_data = []
+    up_to_date = False
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    for row in csv_reader:
+        if row[0] == str(get_date_today_plus_num_days(-1)):
+            up_to_date = True
+    csv_file = open("./Historic_Data/" + str(symbol) + ".csv")
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    csv_header = [['Date', 'Open', 'Close']]
+    for row in csv_reader:
+        if line_count != 0:
+            if len(row) != 3:
                 historic_data.append([row[0], round_float(row[1]), round_float(row[4])])
-            line_count += 1
-        full_data = []
-        if not recent_data == 0:
+            else:
+                historic_data.append([row[0], round_float(row[1]), round_float(row[2])])
+        line_count += 1
+    full_data = []
+    if not up_to_date:
+        valid_ticker = False
+        try:
+            response = requests.get(API_URL, param)
+            json = response.json()
+        except requests.exceptions.RequestException as e:
+            print("Error: {}".format(e))
+            return 0, 0
+        for j in json:
+            if j == "Error Message":
+                valid_ticker = False
+        if valid_ticker:
+            raw_recent_data = (json['Time Series (Daily)'])
+            keys = (raw_recent_data.keys())
+            recent_data = []
+            line_count = 0
+            if not keys == 0:
+                for key in keys:
+                    if line_count != 0:
+                        recent_data.append(
+                            [key,
+                             round_float(raw_recent_data[key]['1. open']),
+                             round_float(raw_recent_data[key]['4. close']),
+                             ])
+                    line_count += 1
             full_data_list_tuple = list(set(tuple(i) for i in (recent_data + historic_data)))
             for data in full_data_list_tuple:
                 full_data.append([data[0], data[1], data[2]])
         else:
-            full_data_list_tuple = list(set(tuple(i) for i in historic_data))
-            for data in full_data_list_tuple:
-                full_data.append([data[0], data[1], data[2]])
-        return full_data
+            return False
+    else:
+        full_data_list_tuple = list(set(tuple(i) for i in historic_data))
+        for data in full_data_list_tuple:
+            full_data.append([data[0], data[1], data[2]])
+    full_data.sort(key=lambda date: time.mktime(time.strptime(date[0], "%Y-%m-%d")))
+    with open("./Historic_Data/" + str((symbol)) + ".csv", "w", newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(csv_header)
+    with open("./Historic_Data/" + str((symbol)) + ".csv", "a", newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(full_data)
+    data_list = full_data
+    convert_price_to_delta()
 
 
 def get_year_span():
@@ -118,18 +156,6 @@ def monthly_max_delta():
         )
         count += 1
     return monthly_maximum_delta_string
-
-
-def convert_price_to_delta():
-    global data_list
-    if len(data_list[0]) == 4:
-        return
-    else:
-        for data_point in data_list:
-            open_price = data_point[1]
-            close_price = data_point[2]
-            delta = 100 * ((close_price - open_price) / open_price)
-            data_point.append(round_float(delta))
 
 
 def compare_past_dates(start_date, stop_date):
@@ -219,7 +245,7 @@ def calculate_price_delta(start_date, stop_date):
         if start_price > -1 and stop_price > -1:
             break
     if start_price == -1 or stop_price == -1:
-        return "Data does not exist\nMake sure dates are within Historic and Recent Data Limits"
+        return "Data does not exist\nMake sure Dates can be found within local data file"
     percent_change = 100 * ((stop_price - start_price)/start_price)
     return (
             start_date_string + str(start_date) +
@@ -230,30 +256,22 @@ def calculate_price_delta(start_date, stop_date):
     )
 
 
-def produce_final_data_list(API_URL, data, symbol):
-    global data_list
-    month_range = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-    raw_recent_data, keys = get_current_raw_data(API_URL, data)
-    data_list = extract_data(raw_recent_data, keys, symbol)
-    apply_month_range(month_range)
-    convert_price_to_delta()
-    data_list.sort(key=lambda date: time.mktime(time.strptime(date[0], "%Y-%m-%d")))
-
-
-def reset():
+def reset(symbol):
     global data_list
     API_URL = "https://www.alphavantage.co/query"
-    symbol = 'aapl'
     param = {"function": "TIME_SERIES_DAILY",
             "symbol": symbol,
             "outputsize": "compact",
             "apikey": "XCD"}
-    produce_final_data_list(API_URL, param, symbol)
     data_list_string = ""
+    valid_ticker = get_data(API_URL, param, symbol)
+    if not valid_ticker:
+        data_list_string = False
     for data in data_list:
         delta_string = data[3]
         if delta_string > 0:
             delta_string = " " + str(delta_string)
         data_list_string += str(data[0]) + " = " + str(delta_string) + "%\n"
     return data_list_string
+
 
