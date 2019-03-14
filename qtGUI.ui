@@ -36,7 +36,7 @@
    <property name="geometry">
     <rect>
      <x>670</x>
-     <y>200</y>
+     <y>280</y>
      <width>611</width>
      <height>461</height>
     </rect>
@@ -74,13 +74,6 @@
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="reset_data_QPushButton">
-      <property name="text">
-       <string>Reset Data</string>
-      </property>
-     </widget>
-    </item>
-    <item>
      <widget class="QPushButton" name="clear_data_QPushButton">
       <property name="text">
        <string>Clear</string>
@@ -93,7 +86,7 @@
    <property name="geometry">
     <rect>
      <x>670</x>
-     <y>670</y>
+     <y>140</y>
      <width>611</width>
      <height>133</height>
     </rect>
@@ -169,38 +162,61 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
      <x>670</x>
-     <y>110</y>
-     <width>221</width>
-     <height>81</height>
+     <y>60</y>
+     <width>611</width>
+     <height>61</height>
     </rect>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <property name="spacing">
-     <number>0</number>
-    </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
-     <widget class="QLabel" name="symbol_QLabel">
-      <property name="text">
-       <string>Symbol:</string>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="spacing">
+       <number>40</number>
       </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLineEdit" name="symbol_QLineEdit">
-      <property name="inputMethodHints">
-       <set>Qt::ImhPreferUppercase|Qt::ImhUppercaseOnly</set>
-      </property>
-      <property name="maxLength">
-       <number>4</number>
-      </property>
-      <property name="clearButtonEnabled">
-       <bool>true</bool>
-      </property>
-     </widget>
+      <item>
+       <widget class="QLabel" name="symbol_QLabel">
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Symbol:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="symbol_QLineEdit">
+        <property name="maximumSize">
+         <size>
+          <width>130</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="inputMethodHints">
+         <set>Qt::ImhPreferUppercase|Qt::ImhUppercaseOnly</set>
+        </property>
+        <property name="maxLength">
+         <number>4</number>
+        </property>
+        <property name="clearButtonEnabled">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="get_data_QPushButton">
+        <property name="text">
+         <string>Get Data</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>

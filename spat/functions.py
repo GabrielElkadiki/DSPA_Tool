@@ -186,7 +186,11 @@ def compare_past_dates(start_date, stop_date):
                 same_date_list.append(data)
         target_delta_list.append(same_date_list)
         same_date_list = []
-    compare_past_dates_string = ""
+    compare_past_dates_string = (
+        "This is a list of comparisons made with past dates of the data available. " +
+        "\nThis works best when there are multiple years of data within the CSV file" +
+        "\n______________________________"
+    )
     for target_list in target_delta_list:
         date = ""
         pos_count = 0
@@ -279,3 +283,4 @@ def reset(symbol):
             delta_string = " " + str(delta_string)
         data_list_string += str(data[0]) + " = " + str(delta_string) + "%\n"
     return data_list_string
+
