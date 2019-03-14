@@ -23,14 +23,26 @@ def convert_price_to_delta():
         for data_point in data_list:
             open_price = data_point[1]
             close_price = data_point[2]
-            delta = 100 * ((close_price - open_price) / open_price)
-            data_point.append(round_float(delta))
+            if not open_price == 0:
+                delta = 100 * ((close_price - open_price) / open_price)
+                data_point.append(round_float(delta))
+            else:
+                data_point.append(0)
 
 
 def get_data(API_URL, param, symbol):
     global data_list
-    if not os.path.exists("./Historic_Data/" + str(symbol) + ".csv"):
-        print("ERROR: Specified stock ticker historic data is unavailable")
+    file_exists = os.path.exists("./Historic_Data/" + str(symbol) + ".csv")
+    if not file_exists:
+        try:
+            response = requests.get(API_URL, param)
+            json = response.json()
+        except requests.exceptions.RequestException as e:
+            print("Error: {}".format(e))
+            return 0, 0
+        for j in json:
+            if j == "Error Message":
+                return False
         csv_file = open("./Historic_Data/" + str(symbol) + ".csv", 'w+')
     else:
         csv_file = open("./Historic_Data/" + str(symbol) + ".csv", 'r')
@@ -52,36 +64,29 @@ def get_data(API_URL, param, symbol):
                 historic_data.append([row[0], round_float(row[1]), round_float(row[2])])
         line_count += 1
     full_data = []
-    if not up_to_date:
-        valid_ticker = False
+    if not up_to_date and not file_exists:
         try:
             response = requests.get(API_URL, param)
             json = response.json()
         except requests.exceptions.RequestException as e:
             print("Error: {}".format(e))
             return 0, 0
-        for j in json:
-            if j == "Error Message":
-                valid_ticker = False
-        if valid_ticker:
-            raw_recent_data = (json['Time Series (Daily)'])
-            keys = (raw_recent_data.keys())
-            recent_data = []
-            line_count = 0
-            if not keys == 0:
-                for key in keys:
-                    if line_count != 0:
-                        recent_data.append(
-                            [key,
-                             round_float(raw_recent_data[key]['1. open']),
-                             round_float(raw_recent_data[key]['4. close']),
-                             ])
-                    line_count += 1
-            full_data_list_tuple = list(set(tuple(i) for i in (recent_data + historic_data)))
-            for data in full_data_list_tuple:
-                full_data.append([data[0], data[1], data[2]])
-        else:
-            return False
+        raw_recent_data = (json['Time Series (Daily)'])
+        keys = (raw_recent_data.keys())
+        recent_data = []
+        line_count = 0
+        if not keys == 0:
+            for key in keys:
+                if line_count != 0:
+                    recent_data.append(
+                        [key,
+                         round_float(raw_recent_data[key]['1. open']),
+                         round_float(raw_recent_data[key]['4. close']),
+                         ])
+                line_count += 1
+        full_data_list_tuple = list(set(tuple(i) for i in (recent_data + historic_data)))
+        for data in full_data_list_tuple:
+            full_data.append([data[0], data[1], data[2]])
     else:
         full_data_list_tuple = list(set(tuple(i) for i in historic_data))
         for data in full_data_list_tuple:
@@ -95,6 +100,7 @@ def get_data(API_URL, param, symbol):
         writer.writerows(full_data)
     data_list = full_data
     convert_price_to_delta()
+    return True
 
 
 def get_year_span():
@@ -262,16 +268,14 @@ def reset(symbol):
     param = {"function": "TIME_SERIES_DAILY",
             "symbol": symbol,
             "outputsize": "compact",
-            "apikey": "XCD"}
+            "apikey": "XXX"}
     data_list_string = ""
     valid_ticker = get_data(API_URL, param, symbol)
     if not valid_ticker:
-        data_list_string = False
+        return False
     for data in data_list:
         delta_string = data[3]
         if delta_string > 0:
             delta_string = " " + str(delta_string)
         data_list_string += str(data[0]) + " = " + str(delta_string) + "%\n"
     return data_list_string
-
-

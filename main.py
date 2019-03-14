@@ -17,11 +17,20 @@ ui.stop_date_dateEdit.setDate(functions.get_date_today_plus_num_days(1))
 def reset_button_event():
     ui.reset_data_QPushButton.setEnabled(False)
     ui.clear_data_QPushButton.setEnabled(True)
-    ui.console_QTextEdit.setText(functions.reset(ui.symbol_QLineEdit.text().upper()))
-    ui.compare_past_dates_QPushButton.setEnabled(True)
-    ui.monthly_maximum_delta_QPushButton.setEnabled(True)
-    ui.max_delta_QPushButton.setEnabled(True)
-    ui.calculate_price_delta_QPushButton.setEnabled(True)
+    reset_return = functions.reset(ui.symbol_QLineEdit.text().upper())
+    if not reset_return:
+        ui.console_QTextEdit.setText("INVALID SYMBOL\nTry Again")
+        ui.compare_past_dates_QPushButton.setEnabled(False)
+        ui.monthly_maximum_delta_QPushButton.setEnabled(False)
+        ui.max_delta_QPushButton.setEnabled(False)
+        ui.calculate_price_delta_QPushButton.setEnabled(False)
+
+    else:
+        ui.console_QTextEdit.setText(str(reset_return))
+        ui.compare_past_dates_QPushButton.setEnabled(True)
+        ui.monthly_maximum_delta_QPushButton.setEnabled(True)
+        ui.max_delta_QPushButton.setEnabled(True)
+        ui.calculate_price_delta_QPushButton.setEnabled(True)
 
 
 def clear_button_event():
