@@ -103,6 +103,11 @@ def get_data(API_URL, param, symbol):
     return True
 
 
+def clear_data():
+    global data_list
+    data_list = []
+
+
 def get_year_span():
     global data_list
     oldest_year = min(int(data[0].split("-")[0]) for data in data_list)
